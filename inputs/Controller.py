@@ -28,7 +28,7 @@ class Controller:
 
     def getInput(self):
 
-        if self.main_window.current_mode is MainWindow.MODE.MAIN or self.main_window.current_mode is MainWindow.MODE.VIDEO or self.main_window.current_mode is MainWindow.MODE.AUDIO:
+        if self.main_window.current_mode is MainWindow.MODE.MAIN or self.main_window.current_mode is MainWindow.MODE.VIDEO or self.main_window.current_mode is MainWindow.MODE.AUDIO or self.main_window.current_mode is MainWindow.MODE.NEWS or self.main_window.current_mode is MainWindow.MODE.NEWSING:
             if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.EYE_HELP:
                 _, img = self.cap.read()
 
@@ -100,6 +100,8 @@ class Controller:
                 elif dicBlink["right"]:
                     self.face_detector.initPos(dicHead["face"])
                     return
+                elif dicBlink["left"]:
+                    self.giveOutput("exit")
 
         elif self.main_window.current_mode is MainWindow.MODE.CHAIR:
             if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.EYE_HELP:

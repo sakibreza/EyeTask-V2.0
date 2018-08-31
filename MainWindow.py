@@ -4,6 +4,7 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.uic import loadUi
 
+from Document import Document
 from WheelChair import WheelChair
 from inputs.Controller import Controller
 
@@ -17,7 +18,9 @@ class MODE(IntEnum):
     SUBPROC = auto()
     AUDIO = auto()
     VIDEO = auto()
-    BROWSER = auto()
+    NEWS = auto()
+    PLAYING = auto()
+    NEWSING = auto()
 
 
 class METHOD(IntEnum):
@@ -48,6 +51,7 @@ class MainWindow(QMainWindow):
         self.main_controller = Controller(self, self.gotInput)
 
         self.player = None
+        self.document = None
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.main_controller.getInput)
@@ -86,8 +90,25 @@ class MainWindow(QMainWindow):
                 self.player.destroy()
                 self.current_mode = MODE.MAIN
             elif command == "press":
-                self.player.play()
+                self.player.togglePlay()
 
+        elif self.current_mode == MODE.NEWS:
+            if command == "right" or command == "down":
+                self.document.nextItem()
+            elif command == "left" or command == "up":
+                self.document.destroy()
+                self.current_mode = MODE.MAIN
+            elif command == "press":
+                self.document.Open()
+                self.current_mode = MODE.NEWSING
+
+        elif self.current_mode == MODE.NEWSING:
+            if command == "right" or command == "down":
+                self.document.scrollDown()
+            elif command == "left" or command == "up":
+                self.document.scrollUp()
+            elif command == "press":
+                self.document.Close()
 
     def closeEvent(self, event):
         # self.main_controller.closed()
@@ -223,6 +244,5 @@ class MainWindow(QMainWindow):
             print(e)
 
     def playBrowser(self):
-        # TODO
-        import webbrowser
-        webbrowser.open_new_tab("http://epaperna.prothomalo.com/")
+        self.current_mode = MODE.NEWS
+        self.document = Document()

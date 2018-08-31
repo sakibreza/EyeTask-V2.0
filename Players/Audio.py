@@ -12,7 +12,14 @@ class Audio:
         self.mediaLength = 0
         self.mediaList = []
         self.formats = ['*.mp3', '*.ogg']
+        self.playing = False
         self.initUI()
+
+    def togglePlay(self):
+        if self.playing:
+            self.pause()
+        else:
+            self.play()
 
     def initUI(self):
         self.list = QListView()
