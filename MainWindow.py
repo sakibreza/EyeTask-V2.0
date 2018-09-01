@@ -7,7 +7,7 @@ from PyQt5.uic import loadUi
 from Document import Document
 from WheelChair import WheelChair
 from inputs.Controller import Controller
-
+from Resources.ResourceKeyboard import ResourceKeyboard
 
 # from testing.Controller import Controller
 
@@ -21,6 +21,7 @@ class MODE(IntEnum):
     NEWS = auto()
     PLAYING = auto()
     NEWSING = auto()
+    SMS = auto()
 
 
 class METHOD(IntEnum):
@@ -42,6 +43,8 @@ class MainWindow(QMainWindow):
         self.resetButton.clicked.connect(self.resetAll)
 
         self.chair = WheelChair()
+        
+        self.keyboard = None
 
         self.current_mode = MODE.MAIN
         self.current_focus = 0
@@ -55,7 +58,7 @@ class MainWindow(QMainWindow):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.main_controller.getInput)
-        self.timer.start(10)
+        self.timer.start(100)
 
     def gotInput(self, command):
         print("Got input : " + str(command))
@@ -109,6 +112,48 @@ class MainWindow(QMainWindow):
                 self.document.scrollUp()
             elif command == "press":
                 self.document.Close()
+                
+        elif self.current_mode == MODE.SMS:
+            sms = ""
+            if self.keyboard != None:
+                
+                if command == "right" or command == "down":
+                    self.keyboard.moveFocusRight()
+                elif command == "left" or command == "up":
+                    self.keyboard.moveFocusLeft()
+                elif command == "gazeright":
+                    self.keyboard.moveFloatRight()
+                elif command == "gazeleft":
+                    self.keyboard.moveFloatLeft()
+                elif command == "press":
+                    if self.keyboard.selectKey():
+                        sms = self.keyboard.str
+                        self.keyboard = None
+                        
+            else:
+              
+                from zeep import Client
+        
+                try:
+                    url = 'https://api2.onnorokomsms.com/sendsms.asmx?WSDL'
+                    client = Client(url)
+                    userName = '01521313223'
+                    password = '90053'
+                    recipientNumber = '01521323429'
+                    smsText = sms
+                    smsType = 'TEXT'
+                    maskName = ''
+                    campaignName = ''
+                    client.service.OneToOne(userName, password, recipientNumber, smsText, smsType, maskName, campaignName)
+                    self.statusBar.showMessage("SMS sent",2000)
+                    print('SMS sent!')
+                except Exception as e:
+                    self.statusBar.showMessage("SMS sent",2000)
+                    print('SMS nor sent!')
+                    print(e)
+                    
+                self.current_mode = MODE.MAIN
+                
 
     def closeEvent(self, event):
         # self.main_controller.closed()
@@ -166,8 +211,9 @@ class MainWindow(QMainWindow):
         self.move(int(width * 0.5), int(height * 0.1))
 
     def playFan(self):
-        self.chair.toggleFan()
-
+        #self.chair.toggleFan()
+        self.board = ResourceKeyboard()
+        
     def playLight(self):
         self.chair.toggleLight()
 
@@ -200,22 +246,10 @@ class MainWindow(QMainWindow):
         self.buttons[self.current_focus].animateClick()
 
     def playSMS(self):
-        from zeep import Client
-        try:
-            url = 'https://api2.onnorokomsms.com/sendsms.asmx?WSDL'
-            client = Client(url)
-            userName = '01521313223'
-            password = '90053'
-            recipientNumber = '01521323429'
-            smsText = 'Help Me'
-            smsType = 'TEXT'
-            maskName = ''
-            campaignName = ''
-            client.service.OneToOne(userName, password, recipientNumber, smsText, smsType, maskName, campaignName)
-            print('SMS sent!')
-        except Exception as e:
-            print('SMS nor sent!')
-            print(e)
+        
+        self.keyboard = ResourceKeyboard()
+        
+        self.current_mode = MODE.SMS
 
     def playEmail(self):
         from email.mime.multipart import MIMEMultipart
