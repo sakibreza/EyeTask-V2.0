@@ -11,7 +11,7 @@ class ResourceKeyboard(QMainWindow):
         super(ResourceKeyboard, self).__init__()
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         loadUi("UI/Keyboard.ui", self)
-        self.currentFocus = 10
+        self.currentFocus = 11
         self.currentFloat = 0
         self.__initializeButtons()
         self.__initializeFloatButtons()
@@ -31,6 +31,8 @@ class ResourceKeyboard(QMainWindow):
              b.setStyleSheet("background-color: black")
              
         self.buttons[self.currentFocus].setStyleSheet("background-color: blue")
+        
+#        self.button_Done.clicked.connect(self.selectKey)
         
     def __initializeFloatButtons(self):
         self.floatButtons={self.button_1:[self.button_Enter,self.button_Space],

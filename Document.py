@@ -38,33 +38,40 @@ class Document:
         self.docLength = len(self.docList)
         self.currentItem = 1
         self.prevItem = self.docLength
-        self.docList[0].setBackground(QColor(97, 138, 204))
+        if len(self.docList) != 0:
+            self.docList[0].setBackground(QColor(97, 138, 204))
         self.list.setModel(self.model)
         self.list.show()
 
     def nextItem(self):
-        if self.currentItem == self.docLength:
-            self.prevItem = self.docLength
-            self.currentItem = 1
-        else:
-            self.prevItem = self.currentItem
-            self.currentItem = self.currentItem + 1
-        self.docList[self.prevItem - 1].setBackground(QColor(35, 38, 41))
-        self.docList[self.currentItem - 1].setBackground(QColor(97, 138, 204))
+        if len(self.docList) != 0:
+            if self.currentItem == self.docLength:
+                self.prevItem = self.docLength
+                self.currentItem = 1
+            else:
+                self.prevItem = self.currentItem
+                self.currentItem = self.currentItem + 1
+            self.docList[self.prevItem - 1].setBackground(QColor(35, 38, 41))
+            self.docList[self.currentItem - 1].setBackground(QColor(97, 138, 204))
 
-    def previousItem(self):
-        if self.currentItem == 1:
-            self.prevItem = 1
-            self.currentItem = self.docLength
-        else:
-            self.prevItem = self.currentItem
-            self.currentItem = self.currentItem - 1
-        self.docList[self.prevItem - 1].setBackground(QColor(35, 38, 41))
-        self.docList[self.currentItem - 1].setBackground(QColor(97, 138, 204))
+#    def previousItem(self):
+#        if len(self.docList) != 0:
+#            if self.currentItem == 1:
+#                self.prevItem = 1
+#                self.currentItem = self.docLength
+#            else:
+#                self.prevItem = self.currentItem
+#                self.currentItem = self.currentItem - 1
+#            self.docList[self.prevItem - 1].setBackground(QColor(35, 38, 41))
+#            self.docList[self.currentItem - 1].setBackground(QColor(97, 138, 204))
 
     def Open(self):
-        self.resourcePdf.Open(self.docList[self.currentItem - 1].text())
-
+        if len(self.docList) != 0:
+            self.resourcePdf.Open(self.docList[self.currentItem - 1].text())
+            return True
+        else:
+            return False
+        
     def scrollDown(self):
         self.resourcePdf.scrollDown()
 

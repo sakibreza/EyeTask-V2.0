@@ -16,12 +16,15 @@ class Audio:
         self.initUI()
 
     def togglePlay(self):
-        if self.playing:
-            self.pause()
-            self.playing = False
-        else:
-            self.play()
-            self.playing = True
+        
+        if len(self.mediaList) != 0:
+        
+            if self.playing:
+                self.pause()
+                self.playing = False
+            else:
+                self.play()
+                self.playing = True
 
     def initUI(self):
         self.list = QListView()
@@ -42,23 +45,30 @@ class Audio:
         self.mediaLength = len(self.mediaList)
         self.currentItem = 1
         self.prevItem = self.mediaLength
-        self.mediaList[0].setBackground(QColor(97, 138, 204))
+        
+        if len(self.mediaList) != 0:
+            self.mediaList[0].setBackground(QColor(97, 138, 204))
+            
         self.list.setModel(self.model)
         self.list.show()
 
     def nextItem(self):
-        if self.currentItem == self.mediaLength:
-            self.prevItem = self.mediaLength
-            self.currentItem = 1
-
-        else:
-            self.prevItem = self.currentItem
-            self.currentItem = self.currentItem + 1
-
-        self.mediaList[self.prevItem - 1].setBackground(QColor(35, 38, 41))
-        self.mediaList[self.currentItem - 1].setBackground(QColor(97, 138, 204))
+        
+        if len(self.mediaList) != 0:
+        
+            if self.currentItem == self.mediaLength:
+                self.prevItem = self.mediaLength
+                self.currentItem = 1
+    
+            else:
+                self.prevItem = self.currentItem
+                self.currentItem = self.currentItem + 1
+    
+            self.mediaList[self.prevItem - 1].setBackground(QColor(35, 38, 41))
+            self.mediaList[self.currentItem - 1].setBackground(QColor(97, 138, 204))
 
 #    def previousItem(self):
+#      if len(self.mediaList) != 0:
 #        if self.currentItem == 1:
 #            self.prevItem = 1
 #            self.currentItem = self.mediaLength
@@ -79,12 +89,14 @@ class Audio:
         self.resourceMusic.pauseMusic()
 
     def stop(self):
-        self.resourceMusic.stopMusic()
+        
+        if len(self.mediaList) != 0:
+            self.resourceMusic.stopMusic()
+            self.playing = False
 
 #    def resume(self):
 #        self.resourceMusic.resumeMusic()
 
-    def destroy(self):
-        self.stop()
+    def Close(self):
         self.list.close()
         return -1

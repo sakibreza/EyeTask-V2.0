@@ -171,7 +171,7 @@ class Controller:
                     self.face_detector.initPos(dicHead["face"])
                     return
                 
-        elif self.main_window.current_mode is MainWindow.MODE.SMS:
+        elif self.main_window.current_mode is MainWindow.MODE.SMS or self.main_window.current_mode is MainWindow.MODE.EMAIL:
             if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.EYE_HELP:
                 _, img = self.cap.read()
                 dicGaze = self.gaze_detector.processImage(img)

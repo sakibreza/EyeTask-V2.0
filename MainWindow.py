@@ -4,7 +4,6 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.uic import loadUi
 
-from Document import Document
 from WheelChair import WheelChair
 from inputs.Controller import Controller
 from Resources.ResourceKeyboard import ResourceKeyboard
@@ -22,6 +21,7 @@ class MODE(IntEnum):
     PLAYING = auto()
     NEWSING = auto()
     SMS = auto()
+    EMAIL = auto()
 
 
 class METHOD(IntEnum):
@@ -45,6 +45,8 @@ class MainWindow(QMainWindow):
         self.chair = WheelChair()
         
         self.keyboard = None
+        self.sms = ""
+        self.email = ""
 
         self.current_mode = MODE.MAIN
         self.current_focus = 0
@@ -86,12 +88,27 @@ class MainWindow(QMainWindow):
                 self.chair.active = False
                 self.current_mode = MODE.MAIN
 
-        elif self.current_mode == MODE.AUDIO or self.current_mode == MODE.VIDEO:
+        elif self.current_mode == MODE.AUDIO:
             if command == "right":
                 self.player.nextItem()
             elif command == "left":
-                self.player.destroy()
-                self.current_mode = MODE.MAIN
+                if self.player.playing:
+                    self.player.stop()
+                else:
+                    self.player.Close()
+                    self.current_mode = MODE.MAIN
+            elif command == "press":
+                self.player.togglePlay()
+                
+        elif self.current_mode == MODE.VIDEO:
+            if command == "right":
+                self.player.nextItem()
+            elif command == "left":
+                if self.player.resourceVideo.process != None:
+                    self.player.stop()
+                else:
+                    self.player.Close()
+                    self.current_mode = MODE.MAIN
             elif command == "press":
                 self.player.togglePlay()
 
@@ -102,8 +119,8 @@ class MainWindow(QMainWindow):
                 self.document.destroy()
                 self.current_mode = MODE.MAIN
             elif command == "press":
-                self.document.Open()
-                self.current_mode = MODE.NEWSING
+                if self.document.Open():
+                    self.current_mode = MODE.NEWSING
 
         elif self.current_mode == MODE.NEWSING:
             if command == "right" or command == "down":
@@ -112,11 +129,11 @@ class MainWindow(QMainWindow):
                 self.document.scrollUp()
             elif command == "press":
                 self.document.Close()
+                self.current_mode = MODE.NEWS
                 
         elif self.current_mode == MODE.SMS:
-            sms = ""
+            
             if self.keyboard != None:
-                
                 if command == "right" or command == "down":
                     self.keyboard.moveFocusRight()
                 elif command == "left" or command == "up":
@@ -127,30 +144,85 @@ class MainWindow(QMainWindow):
                     self.keyboard.moveFloatLeft()
                 elif command == "press":
                     if self.keyboard.selectKey():
-                        sms = self.keyboard.str
+                        self.sms = self.keyboard.str
                         self.keyboard = None
                         
             else:
               
-                from zeep import Client
-        
-                try:
-                    url = 'https://api2.onnorokomsms.com/sendsms.asmx?WSDL'
-                    client = Client(url)
-                    userName = '01521313223'
-                    password = '90053'
-                    recipientNumber = '01521323429'
-                    smsText = sms
-                    smsType = 'TEXT'
-                    maskName = ''
-                    campaignName = ''
-                    client.service.OneToOne(userName, password, recipientNumber, smsText, smsType, maskName, campaignName)
-                    self.statusBar.showMessage("SMS sent",2000)
-                    print('SMS sent!')
-                except Exception as e:
-                    self.statusBar.showMessage("SMS sent",2000)
-                    print('SMS nor sent!')
-                    print(e)
+                if self.sms != "":
+                    
+                    from zeep import Client
+                    
+                    try:
+                        url = 'https://api2.onnorokomsms.com/sendsms.asmx?WSDL'
+                        client = Client(url)
+                        userName = '01521313223'
+                        password = '90053'
+                        recipientNumber = '01521323429'
+                        smsText = self.sms
+                        smsType = 'TEXT'
+                        maskName = ''
+                        campaignName = ''
+                        client.service.OneToOne(userName, password, recipientNumber, smsText, smsType, maskName, campaignName)
+                        self.statusBar.showMessage("SMS sent",2000)
+                        print('SMS sent!')
+                    except Exception as e:
+                        self.statusBar.showMessage("SMS not sent",2000)
+                        print('SMS not sent!')
+                        print(e)    
+                    self.sms = ""
+                        
+                self.current_mode = MODE.MAIN
+                
+        elif self.current_mode == MODE.EMAIL:
+            
+            if self.keyboard != None:
+                if command == "right" or command == "down":
+                    self.keyboard.moveFocusRight()
+                elif command == "left" or command == "up":
+                    self.keyboard.moveFocusLeft()
+                elif command == "gazeright":
+                    self.keyboard.moveFloatRight()
+                elif command == "gazeleft":
+                    self.keyboard.moveFloatLeft()
+                elif command == "press":
+                    if self.keyboard.selectKey():
+                        self.email = self.keyboard.str
+                        self.keyboard = None
+                        
+            else:
+                
+                if self.email != "":
+                    
+                    from email.mime.multipart import MIMEMultipart
+                    from email.mime.text import MIMEText
+                    import smtplib
+                    try:
+                        fromaddr = 'eyegaze.kuet@gmail.com'
+                        toaddr = 'sakibreza1@gmail.com'
+                        msg = MIMEMultipart()
+                        msg['From'] = fromaddr
+                        msg['To'] = toaddr
+                        msg['Subject'] = 'Doctor Appointment'
+            
+                        body = self.email
+                        msg.attach(MIMEText(body, 'plain'))
+            
+                        server = smtplib.SMTP('smtp.gmail.com', 587)
+                        server.starttls()
+                        server.login(fromaddr, '060701cse')
+                        text = msg.as_string()
+                        server.sendmail(fromaddr, toaddr, text)
+                        self.statusBar.showMessage("Email sending!",2000)
+                        server.quit()
+                        self.statusBar.showMessage("Email sent!",2000)
+                        print('Email Sent Successfully')
+                    except Exception as e:
+                        self.statusBar.showMessage("Email not sent!",2000)
+                        print('Email not sent')
+                        print(e)
+                    
+                    self.email = ""
                     
                 self.current_mode = MODE.MAIN
                 
@@ -186,7 +258,7 @@ class MainWindow(QMainWindow):
         self.b1_3.clicked.connect(self.playEmail)
         self.b2_1.clicked.connect(self.playVideo)
         self.b2_2.clicked.connect(self.playMusic)
-        self.b2_3.clicked.connect(self.playBrowser)
+        self.b2_3.clicked.connect(self.playDocument)
         self.b3_1.clicked.connect(self.playLight)
         self.b3_2.clicked.connect(self.playFan)
 
@@ -200,32 +272,6 @@ class MainWindow(QMainWindow):
             pass
         elif self.selectMethodComboBox.currentIndex() == METHOD.VOICE_HELP:
             pass
-
-    def controlWheel(self):
-        self.current_mode = MODE.CHAIR
-        self.chair.active = True
-        from PyQt5 import QtWidgets
-        sizeObject = QtWidgets.QDesktopWidget().screenGeometry(-1)
-        height = sizeObject.height()
-        width = sizeObject.width()
-        self.move(int(width * 0.5), int(height * 0.1))
-
-    def playFan(self):
-        #self.chair.toggleFan()
-        self.board = ResourceKeyboard()
-        
-    def playLight(self):
-        self.chair.toggleLight()
-
-    def playMusic(self):
-        from Players.Audio import Audio
-        self.current_mode = MODE.AUDIO
-        self.player = Audio()
-
-    def playVideo(self):
-        from Players.Video import Video
-        self.current_mode = MODE.VIDEO
-        self.player = Video()
 
     def moveFocusRight(self):
         if self.current_mode is MODE.MAIN:
@@ -246,6 +292,31 @@ class MainWindow(QMainWindow):
 
     def pressFocused(self):
         self.buttons[self.current_focus].animateClick()
+        
+    def playFan(self):
+        self.chair.toggleFan()
+     
+    def controlWheel(self):
+        self.current_mode = MODE.CHAIR
+        self.chair.active = True
+        from PyQt5 import QtWidgets
+        sizeObject = QtWidgets.QDesktopWidget().screenGeometry(-1)
+        height = sizeObject.height()
+        width = sizeObject.width()
+        self.move(int(width * 0.5), int(height * 0.1))
+        
+    def playLight(self):
+        self.chair.toggleLight()
+
+    def playMusic(self):
+        from Players.Audio import Audio
+        self.current_mode = MODE.AUDIO
+        self.player = Audio()
+
+    def playVideo(self):
+        from Players.Video import Video
+        self.current_mode = MODE.VIDEO
+        self.player = Video()
 
     def playSMS(self):
         
@@ -254,31 +325,11 @@ class MainWindow(QMainWindow):
         self.current_mode = MODE.SMS
 
     def playEmail(self):
-        from email.mime.multipart import MIMEMultipart
-        from email.mime.text import MIMEText
-        import smtplib
-        try:
-            fromaddr = 'eyegaze.kuet@gmail.com'
-            toaddr = 'sakibreza1@gmail.com'
-            msg = MIMEMultipart()
-            msg['From'] = fromaddr
-            msg['To'] = toaddr
-            msg['Subject'] = 'Doctor Appointment'
+        
+        self.keyboard = ResourceKeyboard()
+        self.current_mode = MODE.EMAIL
 
-            body = 'I am facing problem.Please come to see me if you are free.'
-            msg.attach(MIMEText(body, 'plain'))
-
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(fromaddr, '060701cse')
-            text = msg.as_string()
-            server.sendmail(fromaddr, toaddr, text)
-            server.quit()
-            print('Email Sent Successfully')
-        except Exception as e:
-            print('Email not sent')
-            print(e)
-
-    def playBrowser(self):
+    def playDocument(self):
+        from Document import Document
         self.current_mode = MODE.NEWS
         self.document = Document()

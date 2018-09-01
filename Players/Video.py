@@ -15,15 +15,18 @@ class Video:
         self.initUI()
 
     def togglePlay(self):
-        if not self.playing:
-            self.play()
-            self.playing = True
-        elif self.resuming:
-            self.pause()
-            self.resuming = True
-        else:
-            self.resume()
-            self.resuming = False
+        
+        if len(self.mediaList) != 0:
+            
+            if not self.playing:
+                self.play()
+                self.playing = True
+            elif self.resuming:
+                self.pause()
+                self.resuming = False
+            else:
+                self.resume()
+                self.resuming = True
 
     def initUI(self):
 	
@@ -48,7 +51,8 @@ class Video:
         
         self.prevItem = self.mediaLength
         
-        self.mediaList[0].setBackground(QColor(97,138,204))
+        if len(self.mediaList) != 0:
+            self.mediaList[0].setBackground(QColor(97,138,204))
         
         self.list.setModel(self.model)
         
@@ -56,25 +60,27 @@ class Video:
         
     def nextItem(self):
         
-        if(self.currentItem == self.mediaLength):
-            
-            self.prevItem = self.mediaLength
-            
-            self.currentItem = 1
-            
-        else:
-            
-            self.prevItem = self.currentItem
-            
-            self.currentItem = self.currentItem + 1
-            
-        self.mediaList[self.prevItem - 1].setBackground(QColor(35,38,41))    
-            
-        self.mediaList[self.currentItem - 1].setBackground(QColor(97,138,204))
+        if len(self.mediaList) != 0:
+        
+            if(self.currentItem == self.mediaLength):
+                
+                self.prevItem = self.mediaLength
+                
+                self.currentItem = 1
+                
+            else:
+                
+                self.prevItem = self.currentItem
+                
+                self.currentItem = self.currentItem + 1
+                
+            self.mediaList[self.prevItem - 1].setBackground(QColor(35,38,41))    
+                
+            self.mediaList[self.currentItem - 1].setBackground(QColor(97,138,204))
         
         
 #    def previousItem(self):
-#        
+#      if len(self.mediaList) != 0:  
 #        if(self.currentItem == 1):
 #            
 #            self.prevItem = 1
@@ -105,9 +111,11 @@ class Video:
         
     def stop(self):
         
-        self.resourceVideo.stop()
-                
-    def destroy(self):
-        self.stop()
+        if len(self.mediaList) != 0:
+            
+            self.resourceVideo.stop()
+            self.playing = False
+            self.resuming = False
+    
+    def Close(self):
         self.list.close()
-        return -1
