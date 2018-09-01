@@ -170,6 +170,38 @@ class Controller:
                 elif dicBlink["right"]:
                     self.face_detector.initPos(dicHead["face"])
                     return
+                
+        elif self.main_window.current_mode is MainWindow.MODE.SMS:
+            if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.EYE_HELP:
+                _, img = self.cap.read()
+                dicGaze = self.gaze_detector.processImage(img)
+                dicBlink = self.blink_detector.processImage(img, self.main_window.eyeThreshold.value())
+                label = "Blink Detector : " \
+                        "both : " + str(dicBlink["both"]) + "\n" \
+                        "left : " + str(dicBlink["left"]) + "\n" \
+                        "right : " + str(dicBlink["right"]) + "\n" \
+                        "leftEAR : " + str(dicBlink["leftEAR"]) + "\n" \
+                        "rightEAR :" + str(dicBlink["rightEAR"]) + "\n" \
+                        "bothTotal : " + str(dicBlink["bothTotal"]) + "\n" \
+                        "leftTotal : " + str(dicBlink["leftTotal"]) + "\n" \
+                        "rightTotal : " + str(dicBlink["rightTotal"]) + "\n" \
+                        "Gaze Detector : " + "\n" \
+                        "direction : " + str(dicGaze["direction"]) + "\n"
+                self.main_window.image_info_textlabel.setText(label)
+                outImage = toQImage(dicBlink["img"])
+                outImage = outImage.rgbSwapped()
+                self.main_window.main_image_label.setPixmap(QPixmap.fromImage(outImage))
+                if dicBlink["left"]:
+                    self.giveOutput("left")
+                elif dicBlink["right"]:
+                    self.giveOutput("right")
+                elif dicBlink["both"]:
+                    self.giveOutput("press")
+                elif dicGaze["direction"] == "left":
+                    self.giveOutput("gazeleft")
+                elif dicGaze["direction"] == "right":
+                    self.giveOutput("gazeright")
+                
 
 
 def toQImage(raw_img):
