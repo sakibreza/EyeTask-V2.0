@@ -223,7 +223,9 @@ class MainWindow(QMainWindow):
         self.player = Audio()
 
     def playVideo(self):
+        from Players.Video import Video
         self.current_mode = MODE.VIDEO
+        self.player = Video()
 
     def moveFocusRight(self):
         if self.current_mode is MODE.MAIN:

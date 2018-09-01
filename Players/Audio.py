@@ -18,8 +18,10 @@ class Audio:
     def togglePlay(self):
         if self.playing:
             self.pause()
+            self.playing = False
         else:
             self.play()
+            self.playing = True
 
     def initUI(self):
         self.list = QListView()
@@ -29,7 +31,7 @@ class Audio:
         self.model = QStandardItemModel(self.list)
         self.resourceMusic = ResourceMusic()
 
-        for root, dirs, files in os.walk("./MusicFiles"):
+        for root, dirs, files in os.walk("MusicFiles"):
             for extensions in self.formats:
                 for filename in fnmatch.filter(files, extensions):
                     item = QStandardItem(filename)
@@ -56,17 +58,17 @@ class Audio:
         self.mediaList[self.prevItem - 1].setBackground(QColor(35, 38, 41))
         self.mediaList[self.currentItem - 1].setBackground(QColor(97, 138, 204))
 
-    def previousItem(self):
-        if self.currentItem == 1:
-            self.prevItem = 1
-            self.currentItem = self.mediaLength
-
-        else:
-            self.prevItem = self.currentItem
-            self.currentItem = self.currentItem - 1
-
-        self.mediaList[self.prevItem - 1].setBackground(QColor(35, 38, 41))
-        self.mediaList[self.currentItem - 1].setBackground(QColor(97, 138, 204))
+#    def previousItem(self):
+#        if self.currentItem == 1:
+#            self.prevItem = 1
+#            self.currentItem = self.mediaLength
+#
+#        else:
+#            self.prevItem = self.currentItem
+#            self.currentItem = self.currentItem - 1
+#
+#        self.mediaList[self.prevItem - 1].setBackground(QColor(35, 38, 41))
+#        self.mediaList[self.currentItem - 1].setBackground(QColor(97, 138, 204))
 
     def play(self):
         print("Music Player : " + str(self.mediaList[self.currentItem - 1].text()))
@@ -79,8 +81,8 @@ class Audio:
     def stop(self):
         self.resourceMusic.stopMusic()
 
-    def resume(self):
-        self.resourceMusic.resumeMusic()
+#    def resume(self):
+#        self.resourceMusic.resumeMusic()
 
     def destroy(self):
         self.stop()
