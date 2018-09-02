@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>597</width>
-    <height>411</height>
+    <width>836</width>
+    <height>463</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <property name="statusTip">
-   <string>Welcome</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -25,6 +25,12 @@
       </property>
       <property name="topMargin">
        <number>15</number>
+      </property>
+      <property name="rightMargin">
+       <number>20</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
       </property>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -225,14 +231,33 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QLabel" name="gaze_image_label">
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>70</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Eye Gaze not found</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
        <widget class="QLabel" name="main_image_label">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="minimumSize">
          <size>
-          <width>280</width>
-          <height>340</height>
+          <width>600</width>
+          <height>300</height>
          </size>
         </property>
         <property name="text">

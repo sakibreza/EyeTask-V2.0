@@ -1,15 +1,11 @@
 from enum import IntEnum, auto
 
-from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QStatusBar
 from PyQt5.uic import loadUi
-
 from WheelChair import WheelChair
-from inputs.Controller import Controller
-from Resources.ResourceKeyboard import ResourceKeyboard
 
-# from testing.Controller import Controller
+from inputs.Controller import Controller
 
 
 class MODE(IntEnum):
@@ -23,6 +19,7 @@ class MODE(IntEnum):
     NEWSING = auto()
     SMS = auto()
     EMAIL = auto()
+    KEYBOARD = auto()
 
 
 class METHOD(IntEnum):
@@ -38,28 +35,33 @@ class MainWindow(QMainWindow):
 
         super(MainWindow, self).__init__()
         loadUi(GUI_UI_LOCATION, self)
+
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
+        self.statusBar.showMessage("Welcome")
+
         self.setWindowTitle(WINDOW_TITLE)
         self.main_image_label.setScaledContents(True)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.gaze_image_label.setScaledContents(True)
+        # self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         # self.b = QtGui.QPushButton("exit", self, clicked=self.close)
 
         self.resetButton.clicked.connect(self.resetAll)
 
         self.chair = WheelChair()
-        
+
         self.keyboard = None
-        self.sms = ""
-        self.email = ""
+        self.msg = ""
 
         self.current_mode = MODE.MAIN
         self.current_focus = 0
 
         self.__initialize_buttons()
 
-        self.main_controller = Controller(self, self.gotInput)
-
         self.player = None
         self.document = None
+
+        self.main_controller = Controller(self, self.gotInput)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.main_controller.getInput)
@@ -68,167 +70,157 @@ class MainWindow(QMainWindow):
     def gotInput(self, command):
         print("Got input : " + str(command))
 
+        if command == "not initialized":
+            self.statusBar.showMessage("Please Initialize First")
+            return
+
         if self.current_mode == MODE.MAIN:
-            if command == "left":
+            if command in ["blinkleft", "headleft"]:
                 self.moveFocusLeft()
-            elif command == "right":
+            elif command in ["blinkright", "headright"]:
                 self.moveFocusRight()
-            elif command == "up":
+            elif command in ["headup"]:
                 self.moveFocusUp()
-            elif command == "down":
+            elif command in ["headdown"]:
                 self.moveFocusDown()
-            elif command == "press":
+            elif command in ["blinkboth"]:
                 self.pressFocused()
 
         elif self.current_mode == MODE.CHAIR:
-            if command == "left":
+            if command in ["gazeleft", "headleft"]:
                 self.chair.left()
-            elif command == "right":
+            elif command in ["gazeright", "headright"]:
                 self.chair.right()
-            elif command == "press":
+            elif command in ["blinkboth"]:
                 self.chair.toggleStartStop()
-            elif command == "exit":
+            elif command in ["blinkleft", "blinkright"]:
                 self.chair.active = False
-                self.current_mode = MODE.MAIN
+                self.changeMode(MODE.MAIN)
 
         elif self.current_mode == MODE.AUDIO:
-            if command == "right":
+            if command in ["blinkright", "headright"]:
                 self.player.nextItem()
-            elif command == "left":
+            elif command in ["blinkleft", "headleft"]:
+                self.statusBar.showMessage("Select an option...")
                 if self.player.playing:
                     self.player.stop()
                 else:
                     self.player.Close()
-                    self.current_mode = MODE.MAIN
-            elif command == "press":
+                    self.changeMode(MODE.MAIN)
+            elif command == "blinkboth":
                 self.player.togglePlay()
                 
         elif self.current_mode == MODE.VIDEO:
-            if command == "right":
+            if command in ["blinkright","headright"]:
                 self.player.nextItem()
-            elif command == "left":
+            elif command in ["blinkleft","headleft"]:
                 if self.player.resourceVideo.process != None:
                     self.player.stop()
                 else:
                     self.player.Close()
-                    self.current_mode = MODE.MAIN
-            elif command == "press":
+                    self.changeMode(MODE.MAIN)
+            elif command in ["bothblink"]:
                 self.player.togglePlay()
 
         elif self.current_mode == MODE.NEWS:
-            if command == "right" or command == "down":
+            if command in ["blinkright","headdown"]:
                 self.document.nextItem()
-            elif command == "left" or command == "up":
+            elif command in ["blinkleft","headleft"]:
                 self.document.destroy()
-                self.current_mode = MODE.MAIN
-            elif command == "press":
+                self.changeMode(MODE.MAIN)
+            elif command in ["blinkboth"]:
                 if self.document.Open():
-                    self.current_mode = MODE.NEWSING
+                    self.changeMode(MODE.NEWSING)
 
         elif self.current_mode == MODE.NEWSING:
-            if command == "right" or command == "down":
+            if command in ["binkright","headright"]:
                 self.document.scrollDown()
-            elif command == "left" or command == "up":
+            elif command in ["blinkleft","headleft"]:
                 self.document.scrollUp()
-            elif command == "press":
+            elif command in ["blinkboth"]:
                 self.document.Close()
-                self.current_mode = MODE.NEWS
-                
+                self.changeMode(MODE.NEWS)
+
+        elif self.current_mode is MODE.KEYBOARD:
+            if self.selectMethodComboBox.currentIndex() == METHOD.EYE_HELP:
+                if command in ["blinkright"]:
+                    self.keyboard.moveFocusRight()
+                elif command in ["blinkleft"]:
+                    self.keyboard.moveFocusLeft()
+                if command in ["gazeright"]:
+                    self.keyboard.moveFloatRight()
+                elif command in ["gazeleft"]:
+                    self.keyboard.moveFloatLeft()
+
+            elif self.selectMethodComboBox.currentIndex() == METHOD.HEAD_HELP:
+                if command in ["headright"]:
+                    self.keyboard.moveFocusRight()
+                elif command in ["headleft"]:
+                    self.keyboard.moveFocusLeft()
+                if command in ["blinkright"]:
+                    self.keyboard.moveFloatRight()
+                elif command in ["blinkleft"]:
+                    self.keyboard.moveFloatLeft()
+
+            if command in ["bothblink"]:
+                if self.keyboard.selectKey():
+                    self.msg = self.keyboard.str
+                    nxtMode = self.keyboard.fortask
+                    self.keyboard = None
+                    if nxtMode == "sms":
+                        self.changeMode(MODE.SMS)
+                    elif nxtMode == "email":
+                        self.changeMode(MODE.EMAIL)
+
+
         elif self.current_mode == MODE.SMS:
+            from zeep import Client
+            try:
+                url = 'https://api2.onnorokomsms.com/sendsms.asmx?WSDL'
+                client = Client(url)
+                userName = '01521313223'
+                password = '90053'
+                recipientNumber = '01521323429'
+                smsText = self.msg
+                smsType = 'TEXT'
+                maskName = ''
+                campaignName = ''
+                client.service.OneToOne(userName, password, recipientNumber, smsText, smsType, maskName,
+                                        campaignName)
+                self.statusBar.showMessage("SMS sent!!")
+            except Exception as e:
+                self.statusBar.showMessage("SMS not sent!!")
+                print(e)
+
+            self.changeMode(MODE.MAIN)
             
-            if self.keyboard != None:
-                if command == "right" or command == "down":
-                    self.keyboard.moveFocusRight()
-                elif command == "left" or command == "up":
-                    self.keyboard.moveFocusLeft()
-                elif command == "gazeright":
-                    self.keyboard.moveFloatRight()
-                elif command == "gazeleft":
-                    self.keyboard.moveFloatLeft()
-                elif command == "press":
-                    if self.keyboard.selectKey():
-                        self.sms = self.keyboard.str
-                        self.keyboard = None
-                        
-            else:
-              
-                if self.sms != "":
-                    
-                    from zeep import Client
-                    
-                    try:
-                        url = 'https://api2.onnorokomsms.com/sendsms.asmx?WSDL'
-                        client = Client(url)
-                        userName = '01521313223'
-                        password = '90053'
-                        recipientNumber = '01521323429'
-                        smsText = self.sms
-                        smsType = 'TEXT'
-                        maskName = ''
-                        campaignName = ''
-                        client.service.OneToOne(userName, password, recipientNumber, smsText, smsType, maskName, campaignName)
-                        self.statusBar.showMessage("SMS sent",2000)
-                        print('SMS sent!')
-                    except Exception as e:
-                        self.statusBar.showMessage("SMS not sent",2000)
-                        print('SMS not sent!')
-                        print(e)    
-                    self.sms = ""
-                        
-                self.current_mode = MODE.MAIN
-                
         elif self.current_mode == MODE.EMAIL:
-            
-            if self.keyboard != None:
-                if command == "right" or command == "down":
-                    self.keyboard.moveFocusRight()
-                elif command == "left" or command == "up":
-                    self.keyboard.moveFocusLeft()
-                elif command == "gazeright":
-                    self.keyboard.moveFloatRight()
-                elif command == "gazeleft":
-                    self.keyboard.moveFloatLeft()
-                elif command == "press":
-                    if self.keyboard.selectKey():
-                        self.email = self.keyboard.str
-                        self.keyboard = None
-                        
-            else:
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+            import smtplib
+            try:
+                fromaddr = 'eyegaze.kuet@gmail.com'
+                toaddr = 'sakibreza1@gmail.com'
+                msg = MIMEMultipart()
+                msg['From'] = fromaddr
+                msg['To'] = toaddr
+                msg['Subject'] = 'Doctor Appointment'
+    
+                body = self.msg
+                msg.attach(MIMEText(body, 'plain'))
+    
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(fromaddr, '060701cse')
+                text = msg.as_string()
+                server.sendmail(fromaddr, toaddr, text)
+                self.statusBar.showMessage("Email sent")
+                server.quit()
+            except Exception as e:
+                self.statusBar.showMessage("Email not sent")
+                print(e)
                 
-                if self.email != "":
-                    
-                    from email.mime.multipart import MIMEMultipart
-                    from email.mime.text import MIMEText
-                    import smtplib
-                    try:
-                        fromaddr = 'eyegaze.kuet@gmail.com'
-                        toaddr = 'sakibreza1@gmail.com'
-                        msg = MIMEMultipart()
-                        msg['From'] = fromaddr
-                        msg['To'] = toaddr
-                        msg['Subject'] = 'Doctor Appointment'
-            
-                        body = self.email
-                        msg.attach(MIMEText(body, 'plain'))
-            
-                        server = smtplib.SMTP('smtp.gmail.com', 587)
-                        server.starttls()
-                        server.login(fromaddr, '060701cse')
-                        text = msg.as_string()
-                        server.sendmail(fromaddr, toaddr, text)
-                        self.statusBar.showMessage("Email sending!",2000)
-                        server.quit()
-                        self.statusBar.showMessage("Email sent!",2000)
-                        print('Email Sent Successfully')
-                    except Exception as e:
-                        self.statusBar.showMessage("Email not sent!",2000)
-                        print('Email not sent')
-                        print(e)
-                    
-                    self.email = ""
-                    
-                self.current_mode = MODE.MAIN
-                
+            self.changeMode(MODE.MAIN)
 
     def closeEvent(self, event):
         # self.main_controller.closed()
@@ -300,39 +292,60 @@ class MainWindow(QMainWindow):
         self.chair.toggleFan()
      
     def controlWheel(self):
-        self.current_mode = MODE.CHAIR
         self.chair.active = True
+        self.changeMode(MODE.CHAIR)
+
+    def moveWindow(self, left, top):
         from PyQt5 import QtWidgets
         sizeObject = QtWidgets.QDesktopWidget().screenGeometry(-1)
         height = sizeObject.height()
         width = sizeObject.width()
-        self.move(int(width * 0.5), int(height * 0.1))
-        
+        self.move(int(width * left), int(height * top))
+
+    def playFan(self):
+        self.chair.toggleFan()
+
     def playLight(self):
         self.chair.toggleLight()
 
     def playMusic(self):
         from Players.Audio import Audio
-        self.current_mode = MODE.AUDIO
+        self.changeMode(MODE.AUDIO)
         self.player = Audio()
 
     def playVideo(self):
         from Players.Video import Video
-        self.current_mode = MODE.VIDEO
+        self.changeMode(MODE.VIDEO)
         self.player = Video()
 
     def playSMS(self):
-        
-        self.keyboard = ResourceKeyboard()
-        
-        self.current_mode = MODE.SMS
+        self.keyboard = ResourceKeyboard("sms")
+        self.changeMode(MODE.KEYBOARD)
 
     def playEmail(self):
         
-        self.keyboard = ResourceKeyboard()
-        self.current_mode = MODE.EMAIL
+        self.keyboard = ResourceKeyboard("email")
+        self.changeMode(MODE.KEYBOARD)
 
     def playDocument(self):
         from Document import Document
-        self.current_mode = MODE.NEWS
+        self.changeMode(MODE.NEWS)
         self.document = Document()
+
+    def changeMode(self, mode):
+        self.current_mode = mode
+        if mode is MODE.KEYBOARD:
+            self.statusBar.showMessage("Please type what you want")
+        elif mode is MODE.SMS:
+            self.statusBar.showMessage("Sending sms")
+        elif mode is MODE.CHAIR:
+            self.statusBar.showMessage("Wheelchair control mode")
+        elif mode is MODE.NEWSING:
+            self.statusBar.showMessage("Reading PDF")
+        elif mode is MODE.AUDIO:
+            self.statusBar.showMessage("Playing Audio")
+        elif mode is MODE.SUBPROC:
+            self.statusBar.showMessage("In subprocess mode")
+        elif mode is MODE.MAIN:
+            self.statusBar.showMessage("Please Select an option")
+            self.gaze_image_label.setText("Not using Eye gaze")

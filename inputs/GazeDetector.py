@@ -28,6 +28,7 @@ class GazeDetector:
         (self.rStart, self.rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
     def processImage(self, frame):
+
         ret = {
             "direction": None,
             "img": None,
@@ -94,7 +95,7 @@ class GazeDetector:
             fontColor = (255, 255, 255)
             lineType = 2
 
-            if dir == "center":
+            if dir == "gazecenter":
 
                 self.dir_c += 1
 
@@ -108,7 +109,7 @@ class GazeDetector:
                                       fontColor,
                                       lineType)
 
-            elif dir == "right":
+            elif dir == "gazeright":
                 self.dir_r += 1
 
                 if self.dir_r > self.CONSEC_FRAMES:
@@ -121,7 +122,7 @@ class GazeDetector:
                                       fontColor,
                                       lineType)
 
-            elif dir == "left":
+            elif dir == "gazeleft":
                 self.dir_l += 1
 
                 if self.dir_l > self.CONSEC_FRAMES:
@@ -134,9 +135,9 @@ class GazeDetector:
                                       fontColor,
                                       lineType)
 
-            cv2.imshow("eye_gaze", img)
+            # cv2.imshow("eye_gaze", img)
+            ret["img"] = img
 
-        ret["img"] = img
         # ret["initial"] = self.init
         # ret["current"] = self.coordinate
         ret["direction"] = self.direction(self.init, self.coordinate)
@@ -153,11 +154,11 @@ class GazeDetector:
         if self.init == [0, 0]:
             return "not initialized"
         elif ix + rad >= cx >= ix - rad:
-            return "center"
+            return "gazecenter"
         elif cx >= ix + rad:
-            return "right"
+            return "gazeright"
         elif cx <= ix - rad:
-            return "left"
+            return "gazeleft"
         
 
     def getangle(self, ini, cur):
