@@ -1,5 +1,6 @@
 from enum import IntEnum, auto
 
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.uic import loadUi
@@ -39,6 +40,8 @@ class MainWindow(QMainWindow):
         loadUi(GUI_UI_LOCATION, self)
         self.setWindowTitle(WINDOW_TITLE)
         self.main_image_label.setScaledContents(True)
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        # self.b = QtGui.QPushButton("exit", self, clicked=self.close)
 
         self.resetButton.clicked.connect(self.resetAll)
 
