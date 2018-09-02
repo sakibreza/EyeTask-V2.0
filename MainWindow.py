@@ -3,6 +3,8 @@ from enum import IntEnum, auto
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMainWindow, QStatusBar
 from PyQt5.uic import loadUi
+
+from Resources.ResourceKeyboard import ResourceKeyboard
 from WheelChair import WheelChair
 
 from inputs.Controller import Controller
