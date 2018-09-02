@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
                 else:
                     self.player.Close()
                     self.changeMode(MODE.MAIN)
-            elif command in ["bothblink"]:
+            elif command in ["blinkboth"]:
                 self.player.togglePlay()
 
         elif self.current_mode == MODE.NEWS:
@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
                 elif command in ["blinkleft"]:
                     self.keyboard.moveFloatLeft()
 
-            if command in ["bothblink"]:
+            if command in ["blinkboth"]:
                 if self.keyboard.selectKey():
                     self.msg = self.keyboard.str
                     nxtMode = self.keyboard.fortask
