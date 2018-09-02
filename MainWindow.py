@@ -8,7 +8,7 @@ from Resources.ResourceKeyboard import ResourceKeyboard
 from WheelChair import WheelChair
 
 from inputs.Controller import Controller
-
+from Resources.ResourceKeyboard import ResourceKeyboard
 
 class MODE(IntEnum):
     CHAIR = auto()

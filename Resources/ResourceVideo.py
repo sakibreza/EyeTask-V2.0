@@ -19,5 +19,5 @@ class ResourceVideo:
         
     def stop(self):
         if self.process:
-            self.process = None
             self.process.terminate()
+            self.process = None
