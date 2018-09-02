@@ -1,16 +1,14 @@
 from enum import IntEnum, auto
 
-from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QStatusBar
 from PyQt5.uic import loadUi
 
 from Document import Document
-from WheelChair import WheelChair
-from inputs.Controller import Controller
 from Resources.ResourceKeyboard import ResourceKeyboard
+from WheelChair import WheelChair
 
-# from testing.Controller import Controller
+from inputs.Controller import Controller
 
 
 class MODE(IntEnum):
@@ -23,6 +21,7 @@ class MODE(IntEnum):
     PLAYING = auto()
     NEWSING = auto()
     SMS = auto()
+    KEYBOARD = auto()
 
 
 class METHOD(IntEnum):
@@ -38,15 +37,21 @@ class MainWindow(QMainWindow):
 
         super(MainWindow, self).__init__()
         loadUi(GUI_UI_LOCATION, self)
+
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
+        self.statusBar.showMessage("Welcome")
+
         self.setWindowTitle(WINDOW_TITLE)
         self.main_image_label.setScaledContents(True)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.gaze_image_label.setScaledContents(True)
+        # self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         # self.b = QtGui.QPushButton("exit", self, clicked=self.close)
 
         self.resetButton.clicked.connect(self.resetAll)
 
         self.chair = WheelChair()
-        
+
         self.keyboard = None
 
         self.current_mode = MODE.MAIN
@@ -54,10 +59,10 @@ class MainWindow(QMainWindow):
 
         self.__initialize_buttons()
 
-        self.main_controller = Controller(self, self.gotInput)
-
         self.player = None
         self.document = None
+
+        self.main_controller = Controller(self, self.gotInput)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.main_controller.getInput)
@@ -66,35 +71,40 @@ class MainWindow(QMainWindow):
     def gotInput(self, command):
         print("Got input : " + str(command))
 
+        if command == "not initialized":
+            self.statusBar.showMessage("Please Initialize First")
+            return
+
         if self.current_mode == MODE.MAIN:
-            if command == "left":
+            if command in ["blinkleft", "headleft"]:
                 self.moveFocusLeft()
-            elif command == "right":
+            elif command in ["blinkright", "headright"]:
                 self.moveFocusRight()
-            elif command == "up":
+            elif command in ["headup"]:
                 self.moveFocusUp()
-            elif command == "down":
+            elif command in ["headdown"]:
                 self.moveFocusDown()
-            elif command == "press":
+            elif command in ["blinkboth"]:
                 self.pressFocused()
 
         elif self.current_mode == MODE.CHAIR:
-            if command == "left":
+            if command in ["gazeleft", "headleft"]:
                 self.chair.left()
-            elif command == "right":
+            elif command in ["gazeright", "headright"]:
                 self.chair.right()
-            elif command == "press":
+            elif command in ["blinkboth"]:
                 self.chair.toggleStartStop()
-            elif command == "exit":
+            elif command in ["blinkleft", "blinkright"]:
                 self.chair.active = False
-                self.current_mode = MODE.MAIN
+                self.changeMode(MODE.MAIN)
 
         elif self.current_mode == MODE.AUDIO or self.current_mode == MODE.VIDEO:
-            if command == "right":
+            if command in ["gazeright", "headright"]:
                 self.player.nextItem()
-            elif command == "left":
+            elif command in ["gazeleft", "headleft"]:
                 self.player.destroy()
-                self.current_mode = MODE.MAIN
+                self.changeMode(MODE.MAIN)
+                self.statusBar.showMessage("Select an option...")
             elif command == "press":
                 self.player.togglePlay()
 
@@ -103,10 +113,10 @@ class MainWindow(QMainWindow):
                 self.document.nextItem()
             elif command == "left" or command == "up":
                 self.document.destroy()
-                self.current_mode = MODE.MAIN
+                self.changeMode(MODE.MAIN)
             elif command == "press":
                 self.document.Open()
-                self.current_mode = MODE.NEWSING
+                self.changeMode(MODE.NEWSING)
 
         elif self.current_mode == MODE.NEWSING:
             if command == "right" or command == "down":
@@ -115,48 +125,57 @@ class MainWindow(QMainWindow):
                 self.document.scrollUp()
             elif command == "press":
                 self.document.Close()
-                
-        elif self.current_mode == MODE.SMS:
-            sms = ""
-            if self.keyboard != None:
-                
-                if command == "right" or command == "down":
+
+        elif self.current_mode is MODE.KEYBOARD:
+            self.msg = ""
+            if self.selectMethodComboBox.currentIndex() == METHOD.EYE_HELP:
+                if command in ["blinkright"]:
                     self.keyboard.moveFocusRight()
-                elif command == "left" or command == "up":
+                elif command in ["blinkleft"]:
                     self.keyboard.moveFocusLeft()
-                elif command == "gazeright":
+                if command in ["gazeright"]:
                     self.keyboard.moveFloatRight()
-                elif command == "gazeleft":
+                elif command in ["gazeleft"]:
                     self.keyboard.moveFloatLeft()
-                elif command == "press":
-                    if self.keyboard.selectKey():
-                        sms = self.keyboard.str
-                        self.keyboard = None
-                        
-            else:
-              
-                from zeep import Client
-        
-                try:
-                    url = 'https://api2.onnorokomsms.com/sendsms.asmx?WSDL'
-                    client = Client(url)
-                    userName = '01521313223'
-                    password = '90053'
-                    recipientNumber = '01521323429'
-                    smsText = sms
-                    smsType = 'TEXT'
-                    maskName = ''
-                    campaignName = ''
-                    client.service.OneToOne(userName, password, recipientNumber, smsText, smsType, maskName, campaignName)
-                    self.statusBar.showMessage("SMS sent",2000)
-                    print('SMS sent!')
-                except Exception as e:
-                    self.statusBar.showMessage("SMS sent",2000)
-                    print('SMS nor sent!')
-                    print(e)
-                    
-                self.current_mode = MODE.MAIN
-                
+
+            elif self.selectMethodComboBox.currentIndex() == METHOD.HEAD_HELP:
+                if command in ["headright"]:
+                    self.keyboard.moveFocusRight()
+                elif command in ["headleft"]:
+                    self.keyboard.moveFocusLeft()
+                if command in ["blinkright"]:
+                    self.keyboard.moveFloatRight()
+                elif command in ["blinkleft"]:
+                    self.keyboard.moveFloatLeft()
+
+            if command in ["bothblink"]:
+                if self.keyboard.selectKey():
+                    msg = self.keyboard.str
+                    nxtMode = self.keyboard.fortask
+                    self.keyboard = None
+                    if nxtMode == "sms":
+                        self.changeMode(MODE.SMS)
+
+        elif self.current_mode == MODE.SMS:
+            from zeep import Client
+            try:
+                url = 'https://api2.onnorokomsms.com/sendsms.asmx?WSDL'
+                client = Client(url)
+                userName = '01521313223'
+                password = '90053'
+                recipientNumber = '01521323429'
+                smsText = self.msg
+                smsType = 'TEXT'
+                maskName = ''
+                campaignName = ''
+                client.service.OneToOne(userName, password, recipientNumber, smsText, smsType, maskName,
+                                        campaignName)
+                self.statusBar.showMessage("SMS sent!!")
+            except Exception as e:
+                self.statusBar.showMessage("SMS not sent!!")
+                print(e)
+
+            self.changeMode(MODE.MAIN)
 
     def closeEvent(self, event):
         # self.main_controller.closed()
@@ -205,29 +224,30 @@ class MainWindow(QMainWindow):
             pass
 
     def controlWheel(self):
-        self.current_mode = MODE.CHAIR
         self.chair.active = True
+        self.changeMode(MODE.CHAIR)
+
+    def moveWindow(self, left, top):
         from PyQt5 import QtWidgets
         sizeObject = QtWidgets.QDesktopWidget().screenGeometry(-1)
         height = sizeObject.height()
         width = sizeObject.width()
-        self.move(int(width * 0.5), int(height * 0.1))
+        self.move(int(width * left), int(height * top))
 
     def playFan(self):
-        #self.chair.toggleFan()
-        self.board = ResourceKeyboard()
-        
+        self.chair.toggleFan()
+
     def playLight(self):
         self.chair.toggleLight()
 
     def playMusic(self):
         from Players.Audio import Audio
-        self.current_mode = MODE.AUDIO
+        self.changeMode(MODE.AUDIO)
         self.player = Audio()
 
     def playVideo(self):
         from Players.Video import Video
-        self.current_mode = MODE.VIDEO
+        self.changeMode(MODE.VIDEO)
         self.player = Video()
 
     def moveFocusRight(self):
@@ -251,10 +271,8 @@ class MainWindow(QMainWindow):
         self.buttons[self.current_focus].animateClick()
 
     def playSMS(self):
-        
-        self.keyboard = ResourceKeyboard()
-        
-        self.current_mode = MODE.SMS
+        self.keyboard = ResourceKeyboard("sms")
+        self.changeMode(MODE.KEYBOARD)
 
     def playEmail(self):
         from email.mime.multipart import MIMEMultipart
@@ -283,5 +301,23 @@ class MainWindow(QMainWindow):
             print(e)
 
     def playBrowser(self):
-        self.current_mode = MODE.NEWS
+        self.changeMode(MODE.NEWS)
         self.document = Document()
+
+    def changeMode(self, mode):
+        self.current_mode = mode
+        if mode is MODE.KEYBOARD:
+            self.statusBar.showMessage("Please type what you want")
+        elif mode is MODE.SMS:
+            self.statusBar.showMessage("Sending sms")
+        elif mode is MODE.CHAIR:
+            self.statusBar.showMessage("Wheelchair control mode")
+        elif mode is MODE.NEWSING:
+            self.statusBar.showMessage("Reading PDF")
+        elif mode is MODE.AUDIO:
+            self.statusBar.showMessage("Playing Audio")
+        elif mode is MODE.SUBPROC:
+            self.statusBar.showMessage("In subprocess mode")
+        elif mode is MODE.MAIN:
+            self.statusBar.showMessage("Please Select an option")
+            self.gaze_image_label.setText("Not using Eye gaze")

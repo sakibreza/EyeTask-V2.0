@@ -18,6 +18,7 @@ from inputs.Speech import Speech
 
 class Controller:
     def __init__(self, main_window, giveOutput):
+        self.gazeImg = None
         self.blink_detector = BlinkDetector()
         self.face_detector = FaceDetector()
         self.gaze_detector = GazeDetector()
@@ -27,181 +28,90 @@ class Controller:
         self.cap = cv2.VideoCapture(0)
 
     def getInput(self):
+        dicBlink = None
+        dicGaze = None
+        dicHead = None
+        label = ""
+        self.drawImg = None
+        img = None
 
-        if self.main_window.current_mode is MainWindow.MODE.MAIN or self.main_window.current_mode is MainWindow.MODE.VIDEO or self.main_window.current_mode is MainWindow.MODE.AUDIO or self.main_window.current_mode is MainWindow.MODE.NEWS or self.main_window.current_mode is MainWindow.MODE.NEWSING:
-            if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.EYE_HELP:
-                _, img = self.cap.read()
+        # Blink
+        if True:
+            _, img = self.cap.read()
+            dicBlink = self.blink_detector.processImage(img, self.main_window.eyeThreshold.value())
 
-                dicBlink = self.blink_detector.processImage(img, self.main_window.eyeThreshold.value())
+            drawImg = dicBlink["img"]
 
-                outImage = toQImage(dicBlink["img"])
-                outImage = outImage.rgbSwapped()
-                self.main_window.main_image_label.setPixmap(QPixmap.fromImage(outImage))
-                label = "Blink Detector : " \
-                        "both : " + str(dicBlink["both"]) + "\n" + \
-                        "left : " + str(dicBlink["left"]) + "\n" + \
-                        "right : " + str(dicBlink["right"]) + "\n" + \
-                        "leftEAR : " + str(dicBlink["leftEAR"]) + "\n" + \
-                        "rightEAR :" + str(dicBlink["rightEAR"]) + "\n" + \
-                        "bothTotal : " + str(dicBlink["bothTotal"]) + "\n" + \
-                        "leftTotal : " + str(dicBlink["leftTotal"]) + "\n" + \
-                        "rightTotal : " + str(dicBlink["rightTotal"]) + "\n"
-                self.main_window.image_info_textlabel.setText(label)
+            label = label + \
+                    "Blink Detector : " + "\n" \
+                                          "\t" + "both : " + str(dicBlink["both"]) + "\n" \
+                                                                                     "\t" + "left : " + str(
+                dicBlink["left"]) + "\n" \
+                                    "\t" + "right : " + str(dicBlink["right"]) + "\n" \
+                                                                                 "\t" + "leftEAR : " + str(
+                dicBlink["leftEAR"]) + "\n" \
+                                       "\t" + "rightEAR :" + str(dicBlink["rightEAR"]) + "\n" \
+                                                                                         "\t" + "bothTotal : " + str(
+                dicBlink["bothTotal"]) + "\n" \
+                                         "\t" + "leftTotal : " + str(dicBlink["leftTotal"]) + "\n" \
+                                                                                              "\t" + "rightTotal : " + str(
+                dicBlink["rightTotal"]) + "\n" \
+ \
+                # Head
+        if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.HEAD_HELP:
+            dicHead = self.face_detector.processImage(img, drawImg)
 
-                if dicBlink["left"]:
-                    self.giveOutput("left")
-                    return
-                elif dicBlink["right"]:
-                    self.giveOutput("right")
-                    return
-                elif dicBlink["both"]:
-                    self.giveOutput("press")
-                    return
+            label = label + \
+                    "Head Detector : " + "\n" \
+                                         "\t" + "direction : " + str(dicHead["direction"]) + "\n"
 
-            elif self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.HEAD_HELP:
-                _, img = self.cap.read()
+        # GAZE
+        if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.EYE_HELP \
+                and self.main_window.current_mode in [MainWindow.MODE.CHAIR, MainWindow.MODE.KEYBOARD]:
 
-                dicBlink = self.blink_detector.processImage(img, self.main_window.eyeThreshold.value())
+            dicGaze = self.gaze_detector.processImage(img)
 
-                outImage = toQImage(dicBlink["img"])
-                outImage = outImage.rgbSwapped()
-                self.main_window.main_image_label.setPixmap(QPixmap.fromImage(outImage))
-                dicHead = self.face_detector.processImage(img)
+            label = label + \
+                    "Gaze Detector : " + "\n" \
+                                         "\t" + "Gaze : " + str(dicGaze["direction"]) + "\n"
 
-                label = "Blink Detector : " \
-                        "both : " + str(dicBlink["both"]) + "\n" \
-                        "left : " + str(dicBlink["left"]) + "\n" \
-                        "right : " + str(dicBlink["right"]) + "\n" \
-                        "leftEAR : " + str(dicBlink["leftEAR"]) + "\n" \
-                        "rightEAR :" + str(dicBlink["rightEAR"]) + "\n" \
-                        "bothTotal : " + str(dicBlink["bothTotal"]) + "\n" \
-                        "leftTotal : " + str(dicBlink["leftTotal"]) + "\n" \
-                        "rightTotal : " + str(dicBlink["rightTotal"]) + "\n" \
-                        "Head Detector : " + "\n" \
-                        "direction : " + str(dicHead["direction"]) + "\n"
-                self.main_window.image_info_textlabel.setText(label)
+            if dicGaze["img"] is not None:
+                self.gazeImg = dicGaze["img"]
+                self.gazeImg = toQImage(self.gazeImg)
 
-                head = dicHead["direction"]
-                if head == "left":
-                    self.giveOutput("left")
-                    return
-                elif head == "right":
-                    self.giveOutput("right")
-                    return
-                elif head == "up":
-                    self.giveOutput("up")
-                    return
-                elif head == "down":
-                    self.giveOutput("down")
-                    return
-                elif dicBlink["both"]:
-                    self.giveOutput("press")
-                    return
-                elif dicBlink["right"]:
+            if self.gazeImg is not None:
+                self.main_window.gaze_image_label.setPixmap(QPixmap.fromImage(self.gazeImg))
+            else:
+                self.main_window.gaze_image_label.setText("None")
+
+        outImage = toQImage(drawImg)
+        outImage = outImage.rgbSwapped()
+        self.main_window.main_image_label.setPixmap(QPixmap.fromImage(outImage))
+        self.main_window.image_info_textlabel.setText(label)
+
+        if dicBlink is not None:
+            if dicBlink["left"]:
+                if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.HEAD_HELP:
                     self.face_detector.initPos(dicHead["face"])
                     return
-                elif dicBlink["left"]:
-                    self.giveOutput("exit")
-
-        elif self.main_window.current_mode is MainWindow.MODE.CHAIR:
-            if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.EYE_HELP:
-                _, img = self.cap.read()
-                dicGaze = self.gaze_detector.processImage(img)
-                dicBlink = self.blink_detector.processImage(img, self.main_window.eyeThreshold.value())
-                label = "Blink Detector : " \
-                        "both : " + str(dicBlink["both"]) + "\n" \
-                        "left : " + str(dicBlink["left"]) + "\n" \
-                        "right : " + str(dicBlink["right"]) + "\n" \
-                        "leftEAR : " + str(dicBlink["leftEAR"]) + "\n" \
-                        "rightEAR :" + str(dicBlink["rightEAR"]) + "\n" \
-                        "bothTotal : " + str(dicBlink["bothTotal"]) + "\n" \
-                        "leftTotal : " + str(dicBlink["leftTotal"]) + "\n" \
-                        "rightTotal : " + str(dicBlink["rightTotal"]) + "\n" \
-                        "Gaze Detector : " + "\n" \
-                        "direction : " + str(dicGaze["direction"]) + "\n"
-                self.main_window.image_info_textlabel.setText(label)
-                outImage = toQImage(dicBlink["img"])
-                outImage = outImage.rgbSwapped()
-                self.main_window.main_image_label.setPixmap(QPixmap.fromImage(outImage))
-                self.giveOutput(dicGaze["direction"])
-                if dicBlink["right"] or dicBlink["left"]:
-                    self.giveOutput("exit")
-                    cv2.destroyAllWindows()
-
+                self.giveOutput("blinkleft")
+                return
+            elif dicBlink["right"]:
+                self.giveOutput("blinkright")
+                return
+            elif dicBlink["both"]:
+                self.giveOutput("blinkboth")
                 return
 
-            elif self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.HEAD_HELP:
-                _, img = self.cap.read()
-                dicBlink = self.blink_detector.processImage(img, self.main_window.eyeThreshold.value())
-                dicHead = self.face_detector.processImage(img)
+        if dicHead is not None:
+            if dicHead["direction"] != "not initialized":
+                self.giveOutput(dicHead["direction"])
+                return
 
-                label = "Blink Detector : " \
-                        "both : " + str(dicBlink["both"]) + "\n" \
-                        "left : " + str(dicBlink["left"]) + "\n" \
-                        "right : " + str(dicBlink["right"]) + "\n" \
-                        "leftEAR : " + str(dicBlink["leftEAR"]) + "\n" \
-                        "rightEAR :" + str(dicBlink["rightEAR"]) + "\n" \
-                        "bothTotal : " + str(dicBlink["bothTotal"]) + "\n" \
-                        "leftTotal : " + str(dicBlink["leftTotal"]) + "\n" \
-                        "rightTotal : " + str(dicBlink["rightTotal"]) + "\n" \
-                        "Head Detector : " + "\n" \
-                        "direction : " + str(dicBlink["rightTotal"]) + "\n"
-                self.main_window.image_info_textlabel.setText(label)
-
-                outImage = toQImage(dicBlink["img"])
-                outImage = outImage.rgbSwapped()
-                self.main_window.main_image_label.setPixmap(QPixmap.fromImage(outImage))
-                head = dicHead["direction"]
-                if head == "left":
-                    self.giveOutput("left")
-                    return
-                elif head == "right":
-                    self.giveOutput("right")
-                    return
-                elif head == "up":
-                    self.giveOutput("up")
-                    return
-                elif head == "down":
-                    self.giveOutput("down")
-                    return
-                elif dicBlink["both"]:
-                    self.giveOutput("press")
-                    return
-                elif dicBlink["right"]:
-                    self.face_detector.initPos(dicHead["face"])
-                    return
-                
-        elif self.main_window.current_mode is MainWindow.MODE.SMS:
-            if self.main_window.selectMethodComboBox.currentIndex() == MainWindow.METHOD.EYE_HELP:
-                _, img = self.cap.read()
-                dicGaze = self.gaze_detector.processImage(img)
-                dicBlink = self.blink_detector.processImage(img, self.main_window.eyeThreshold.value())
-                label = "Blink Detector : " \
-                        "both : " + str(dicBlink["both"]) + "\n" \
-                        "left : " + str(dicBlink["left"]) + "\n" \
-                        "right : " + str(dicBlink["right"]) + "\n" \
-                        "leftEAR : " + str(dicBlink["leftEAR"]) + "\n" \
-                        "rightEAR :" + str(dicBlink["rightEAR"]) + "\n" \
-                        "bothTotal : " + str(dicBlink["bothTotal"]) + "\n" \
-                        "leftTotal : " + str(dicBlink["leftTotal"]) + "\n" \
-                        "rightTotal : " + str(dicBlink["rightTotal"]) + "\n" \
-                        "Gaze Detector : " + "\n" \
-                        "direction : " + str(dicGaze["direction"]) + "\n"
-                self.main_window.image_info_textlabel.setText(label)
-                outImage = toQImage(dicBlink["img"])
-                outImage = outImage.rgbSwapped()
-                self.main_window.main_image_label.setPixmap(QPixmap.fromImage(outImage))
-                if dicBlink["left"]:
-                    self.giveOutput("left")
-                elif dicBlink["right"]:
-                    self.giveOutput("right")
-                elif dicBlink["both"]:
-                    self.giveOutput("press")
-                elif dicGaze["direction"] == "left":
-                    self.giveOutput("gazeleft")
-                elif dicGaze["direction"] == "right":
-                    self.giveOutput("gazeright")
-                
+        if dicGaze is not None:
+            if dicGaze["direction"] != "not initialized":
+                self.giveOutput(dicGaze["direction"])
+                return
 
 
 def toQImage(raw_img):

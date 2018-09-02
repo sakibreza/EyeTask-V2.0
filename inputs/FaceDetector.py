@@ -15,7 +15,7 @@ class FaceDetector:
         self.conf = 5
         self.rad = 20
 
-    def processImage(self, img):
+    def processImage(self, img, drawImg):
         ret = {
             "direction": "NaN",
             "face": None
@@ -23,10 +23,17 @@ class FaceDetector:
         img = cv2.flip(img, 1)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         faces = self.face_cascade.detectMultiScale(gray, 1.3, 3)
-        cv2.circle(img, (self.init[0], self.init[1]), 3, (0, 255, 0), -1)
-        cv2.line(img, (self.init[0], self.init[1]), (self.coordinate[0], self.coordinate[1]), (0, 255, 0), 2)
+        # cv2.circle(img, (self.init[0], self.init[1]), 3, (0, 255, 0), 2)
+        # cv2.line(img, (self.init[0], self.init[1]), (self.coordinate[0], self.coordinate[1]), (0, 255, 0), 2)
+
+        cv2.circle(drawImg, (self.init[0], self.init[1]), 3, (0, 255, 0), 2)
+        cv2.line(drawImg, (self.init[0], self.init[1]), (self.coordinate[0], self.coordinate[1]), (0, 255, 0), 2)
+
         for (x, y, w, h) in faces:
-            cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 3)
+            # cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 3)
+
+            cv2.rectangle(drawImg, (x, y), (x + w, y + h), (255, 0, 0), 3)
+
             self.coordinate = [int(x + w / 2), int(y + h / 2)]
             ret["face"] = self.coordinate
             # print("-----")
@@ -45,7 +52,7 @@ class FaceDetector:
             fontColor = (255, 255, 255)
             lineType = 2
 
-            if dir == "center":
+            if dir == "headcenter":
                 self.dir_c += 1
                 if self.dir_c >= self.conf:
                     self.dir_l = 0
@@ -54,13 +61,20 @@ class FaceDetector:
                     self.dir_d = 0
                     if self.dir_c%self.conf == 0:
                         ret["direction"] = dir
-                    img = cv2.putText(img, '< Center >',
+                    # img = cv2.putText(img, '< Center >',
+                    #                   bottomLeftCornerOfTextc,
+                    #                   font,
+                    #                   fontScale,
+                    #                   fontColor,
+                    #                   lineType)
+
+                    drawImg = cv2.putText(drawImg, '< Center >',
                                       bottomLeftCornerOfTextc,
                                       font,
                                       fontScale,
                                       fontColor,
                                       lineType)
-            elif dir == "right":
+            elif dir == "headright":
                 self.dir_r += 1
                 if self.dir_r > self.conf:
                     self.dir_l = 0
@@ -69,14 +83,21 @@ class FaceDetector:
                     self.dir_d = 0
                     if self.dir_r%self.conf == 0:
                         ret["direction"] = dir
-                    img = cv2.putText(img, 'Right >',
+                    # img = cv2.putText(img, 'Right >',
+                    #                   bottomLeftCornerOfTextr,
+                    #                   font,
+                    #                   fontScale,
+                    #                   fontColor,
+                    #                   lineType)
+
+                    drawImg = cv2.putText(drawImg, 'Right >',
                                       bottomLeftCornerOfTextr,
                                       font,
                                       fontScale,
                                       fontColor,
                                       lineType)
 
-            elif dir == "left":
+            elif dir == "headleft":
                 self.dir_l += 1
                 if self.dir_l > self.conf:
                     self.dir_c = 0
@@ -85,14 +106,21 @@ class FaceDetector:
                     self.dir_d = 0
                     if self.dir_l%self.conf == 0:
                         ret["direction"] = dir
-                    img = cv2.putText(img, '< left',
+                    # img = cv2.putText(img, '< left',
+                    #                   bottomLeftCornerOfTextl,
+                    #                   font,
+                    #                   fontScale,
+                    #                   fontColor,
+                    #                   lineType)
+
+                    drawImg = cv2.putText(drawImg, '< left',
                                       bottomLeftCornerOfTextl,
                                       font,
                                       fontScale,
                                       fontColor,
                                       lineType)
 
-            elif dir == "up":
+            elif dir == "headup":
                 self.dir_u += 1
                 if self.dir_u > self.conf:
                     self.dir_l = 0
@@ -101,14 +129,21 @@ class FaceDetector:
                     self.dir_d = 0
                     if self.dir_u%self.conf == 0:
                         ret["direction"] = dir
-                    img = cv2.putText(img, '< Up >',
+                    # img = cv2.putText(img, '< Up >',
+                    #                   bottomLeftCornerOfTextc,
+                    #                   font,
+                    #                   fontScale,
+                    #                   fontColor,
+                    #                   lineType)
+
+                    drawImg = cv2.putText(drawImg, '< Up >',
                                       bottomLeftCornerOfTextc,
                                       font,
                                       fontScale,
                                       fontColor,
                                       lineType)
 
-            elif dir == "down":
+            elif dir == "headdown":
                 self.dir_d += 1
                 if self.dir_d > self.conf:
                     self.dir_l = 0
@@ -117,14 +152,21 @@ class FaceDetector:
                     self.dir_d = 0
                     if self.dir_d%self.conf == 0:
                         ret["direction"] = dir
-                    img = cv2.putText(img, '< Down >',
+                    # img = cv2.putText(img, '< Down >',
+                    #                   bottomLeftCornerOfTextc,
+                    #                   font,
+                    #                   fontScale,
+                    #                   fontColor,
+                    #                   lineType)
+
+                    drawImg = cv2.putText(drawImg, '< Down >',
                                       bottomLeftCornerOfTextc,
                                       font,
                                       fontScale,
                                       fontColor,
                                       lineType)
 
-        cv2.imshow('img', img)
+        # cv2.imshow('img', img)
         return ret
 
     def direction(self, ini, cur, flag=1):
@@ -136,18 +178,18 @@ class FaceDetector:
             return "not initialized"
         elif ix + self.rad >= cx >= ix - self.rad:
             if flag == 0:
-                return "center"
+                return "headcenter"
             elif flag == 1 and cy >= iy + self.rad:
-                return "down"
+                return "headdown"
             elif flag == 1 and cy <= iy - self.rad:
-                return "up"
+                return "headup"
             else:
-                return "center"
+                return "headcenter"
 
         elif cx >= ix + self.rad:
-            return "right"
+            return "headright"
         elif cx <= ix - self.rad:
-            return "left"
+            return "headleft"
 
     def getangle(self, ini, cur):
         ix = ini[0]
