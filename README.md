@@ -3,6 +3,12 @@
 # Eye Based Wheelchair Control and Task Manager for Disabled Persons
 > Primary Release v2
 
+> <a href="https://github.com/sakibreza/EyeTask-V1.0">previous repository</a> 
+
+> <a href="https://drive.google.com/file/d/14vvtfkJyRcsI8t_gEwR2SFamDXiyOwKg/view?usp=sharing"><h3>Project Video Demonstration</h3></a>
+
+> <a href="https://drive.google.com/file/d/1HC7feBmepygDauGZIJQKgtOyqj2AgMED/view?usp=sharing"><h3>Project Report</h3></a>
+
 ![Screenshot](images/screenshot.png)
 
 ## Python Package Dependencies
