@@ -9,6 +9,8 @@
 
 > <a href="https://drive.google.com/file/d/1HC7feBmepygDauGZIJQKgtOyqj2AgMED/view?usp=sharing"><h3>Project Report</h3></a>
 
+> <h3>Paper to Cite:</h3> <a href="https://www.researchgate.net/publication/340687056_A_Multi-Modal_Human_Machine_Interface_for_Controlling_a_Smart_Wheelchair">Mahmud, S., Lin, X., Kim, J.H., Iqbal, H., Rahat-Uz-Zaman, M.D., Reza, S. and Rahman, M.A., 2019, December. A multi-modal human machine interface for controlling a smart wheelchair. In 2019 IEEE 7th Conference on Systems, Process and Control (ICSPC) (pp. 10-13). IEEE.</a>
+
 ![Screenshot](images/screenshot.png)
 
 ## Python Package Dependencies
