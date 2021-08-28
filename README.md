@@ -1,4 +1,4 @@
-> <img src="images/kuet.png" alt="Logo of our University" width="160"> 
+
 
 # Eye Based Wheelchair Control and Task Manager for Disabled Persons
 > Primary Release v2
@@ -111,12 +111,17 @@ So If you'd like to contribute, please fork the repository and use a feature bra
 - opencv: https://docs.opencv.org/2.4/index.html
 - imutils: https://github.com/jrosebr1/imutils
 
-## Author
+## Developers
 Sakib Reza, Rahat Zaman,  Asifur Rahman, Hasib Iqbal Pranto<br>
 sakibreza1@gmail.com<br>
 Student at Department of Computer Science and Engineering<br>
 Khulna University of Engineering & Technology, Khulna<br>
 Bangladesh
+
+## Mentor
+Saifuddin Mahmud<br>
+Advanced Telerobotics Research Lab <br>
+Kent State University, Kent, Ohio, 44240, USA
 
 ## Licensing
 The code in this project is licensed under GNU GPLv3 license.
